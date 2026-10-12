@@ -24,4 +24,11 @@ A modern e-commerce frontend built with React.js.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/mthashreef21/ShopCart.git
+git clone https://github.com/mthashreef21/ShopCart.git '''
+
+
+### 2. API Data
+
+ShopCart uses the DummyJSON API to fetch product data.
+
+**API Endpoint:** https://dummyjson.com/products?limit=0
