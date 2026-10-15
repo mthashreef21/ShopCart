@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 import {
   Clock,
@@ -9,11 +10,9 @@ import {
   Zap,
   Flame,
 } from "lucide-react";
+import { formatPrice, getDiscountedPrice } from "../../utils/price";
 
-// Illustrative exchange rate; update when needed.
-const USD_TO_INR = 88;
-
-function FlashDeals() {
+function FlashDeals({ onAdd }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,20 +83,6 @@ function FlashDeals() {
   ).padStart(2, "0");
 
   const seconds = String(timeLeft % 60).padStart(2, "0");
-
-  // Format prices in Indian Rupees
-  const formatPrice = (amountInUSD) => {
-    const amountInINR = amountInUSD * USD_TO_INR;
-
-    return `₹${Math.round(amountInINR).toLocaleString("en-IN")}`;
-  };
-
-  // Calculate discounted price
-  const getDiscountedPrice = (price, discountPercentage) => {
-    return formatPrice(
-      price * (1 - discountPercentage / 100)
-    );
-  };
 
   // Wishlist toggle
   const toggleWishlist = (productId) => {
@@ -224,12 +209,14 @@ function FlashDeals() {
               >
                 {/* Product Image */}
                 <div className="relative aspect-square overflow-hidden bg-gray-50">
-                  <img
-                    src={product.thumbnail}
-                    alt={product.title}
-                    loading="lazy"
-                    className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105 sm:p-5"
-                  />
+                  <Link to={`/product/${product.id}`} aria-label={`View ${product.title}`}>
+                    <img
+                      src={product.thumbnail}
+                      alt={product.title}
+                      loading="lazy"
+                      className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105 sm:p-5"
+                    />
+                  </Link>
 
                   {/* Discount Badge */}
                   <span className="absolute left-2 top-2 rounded-lg bg-red-500 px-2 py-1 text-xs font-bold text-white sm:left-3 sm:top-3">
@@ -265,7 +252,9 @@ function FlashDeals() {
                   </p>
 
                   <h3 className="line-clamp-2 min-h-10 text-sm font-semibold text-gray-900 sm:text-base">
-                    {product.title}
+                    <Link to={`/product/${product.id}`} className="hover:text-violet-700">
+                      {product.title}
+                    </Link>
                   </h3>
 
                   {/* Rating */}
@@ -301,6 +290,20 @@ function FlashDeals() {
                   {/* Add to Cart */}
                   <button
                     type="button"
+                    onClick={() =>
+                      onAdd?.(
+                        {
+                          id: product.id,
+                          title: product.title,
+                          thumbnail: product.thumbnail,
+                          price: product.price,
+                          discountPercentage: product.discountPercentage,
+                          category: product.category,
+                          stock: product.stock,
+                        },
+                        1
+                      )
+                    }
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700"
                   >
                     <ShoppingCart size={17} />

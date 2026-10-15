@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import { Link } from 'react-router-dom'
 import {
     ShoppingCart,
     Heart,
@@ -10,12 +11,11 @@ import {
 } from 'lucide-react';
 
 
-function Navbar() {
+function Navbar({ cartCount = 0 }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const wishlistCount = 2;
-    const cartCount = 0;
 
     const navLinks = [
         {name: "Home", href: '/'},
@@ -44,7 +44,7 @@ function Navbar() {
                     </button>
 
                     {/* ShopCart Logo */}
-                    <a href="/" className="flex items-center gap-2">
+                    <Link to="/" className="flex items-center gap-2">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-blue-200">
                             <ShoppingCart size={24} strokeWidth={2.5} />
                         </div>
@@ -52,15 +52,15 @@ function Navbar() {
                             <span className="text-gray-950">Shop</span>
                             <span className="text-blue-600">Cart</span>
                         </span>
-                    </a>
+                    </Link>
                 </div>
 
                 {/* Desktop Navigation Links */}
                 <div className="hidden shrink-0 items-center gap-5 xl:ml-6 xl:flex 2xl:ml-8 2xl:gap-7">
                     {navLinks.map((link,index) => (
-                        <a key={link.name} href={link.href} className={`relative whitespace-nowrap py-2 text-sm font-semibold transition-colors ${index === 0 ? 'text-blue-600 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                        <Link key={link.name} to={link.href} className={`relative whitespace-nowrap py-2 text-sm font-semibold transition-colors ${index === 0 ? 'text-blue-600 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
                             {link.name}
-                        </a>
+                        </Link>
                     ))}
                 </div>
 
@@ -78,7 +78,7 @@ function Navbar() {
                 <div className="flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-5">
 
                     {/* Wishlist */}
-                    <a href="/wishlist" aria-label={`Wishlist, ${wishlistCount} items`} className="relative flex flex-col items-center gap-1 rounded-lg p-2 text-gray-800 transition hover:text-blue-600">
+                    <Link to="/wishlist" aria-label={`Wishlist, ${wishlistCount} items`} className="relative flex flex-col items-center gap-1 rounded-lg p-2 text-gray-800 transition hover:text-blue-600">
                         <span className="relative">
                             <Heart size={23} strokeWidth={1.8}/>
 
@@ -90,10 +90,10 @@ function Navbar() {
                         </span>
 
                         <span className='hidden text-xs font-medium lg:block'>Wishlist</span>
-                    </a>
+                    </Link>
 
                     {/* Cart */}
-                    <a href='/cart' aria-label={`Shopping cart, ${cartCount} items`} className="group relative flex flex-col items-center gap-1 rounded-lg p-2 text-gray-800 transition hover:text-blue-600">
+                    <Link to='/cart' aria-label={`Shopping cart, ${cartCount} items`} className="group relative flex flex-col items-center gap-1 rounded-lg p-2 text-gray-800 transition hover:text-blue-600">
                             <span className='relative'>
                                 <ShoppingCart size={23} strokeWidth={1.8}/>
 
@@ -106,15 +106,15 @@ function Navbar() {
                             <span className="hidden text-xs font-medium lg:block">
                                 Cart
                             </span>
-                    </a>
+                    </Link>
 
                     {/* Account */}
-                    <a href='/profile' aria-label="My account" className='flex flex-col items-center gap-1 rounded-lg p-2 text-gray-800 transition hover:text-blue-600'>
+                    <Link to='/profile' aria-label="My account" className='flex flex-col items-center gap-1 rounded-lg p-2 text-gray-800 transition hover:text-blue-600'>
                         <UserRound size={23} strokeWidth={1.8} />
                         <span className="hidden items-center gap-1 text-xs font-medium lg:flex">
                             Account <ChevronDown size={13}/>
                         </span>
-                    </a>
+                    </Link>
                 </div>
             </nav>
 
@@ -123,9 +123,9 @@ function Navbar() {
                 <div className="border-t border-gray-100 bg-white px-5 py-4 shadow-lg xl:hidden">
                     <div className='mx-auto flex max-w-7xl flex-col'>
                         {navLinks.map((link) => (
-                            <a key={link.name} href={link.href} onClick={() => setIsMenuOpen(false)} className='border-b border-gray-100 py-3 text-sm font-medium text-gray-700 transition hover:text-blue-600 last:border-b-0'>
+                            <Link key={link.name} to={link.href} onClick={() => setIsMenuOpen(false)} className='border-b border-gray-100 py-3 text-sm font-medium text-gray-700 transition hover:text-blue-600 last:border-b-0'>
                                 {link.name}
-                            </a>
+                            </Link>
                         ))}
                     </div>
                 </div>

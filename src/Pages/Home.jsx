@@ -3,9 +3,9 @@ import BenefitsSection from "../Features/home/BenefitsSection"
 import CategorySection from "../Features/home/CategorySection"
 import FlashDeals from "../Features/home/FlashDeals"
 
-function Home(){
-    
-    
+function Home({ onAdd }){
+
+
     return(
         <main>
             {/* Promotional Banner */}
@@ -16,7 +16,7 @@ function Home(){
 
             <CategorySection/>
 
-            <FlashDeals/>
+            <FlashDeals onAdd={onAdd}/>
         
         </main>
     )
