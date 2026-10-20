@@ -1,15 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Heart, Minus, Plus, ShieldCheck, ShoppingCart, Tag, Trash2, Truck } from "lucide-react";
+import { ArrowRight, Heart, Minus, Plus, ShieldCheck, ShoppingCart, Trash2, Truck } from "lucide-react";
 import { formatPrice, toINR } from "../utils/price";
 
 const FREE_SHIPPING_THRESHOLD = 499;
 
 export default function Cart({ items = [], onUpdateQty, onRemove, onClear }) {
-  const [coupon, setCoupon] = useState("");
-  const [couponMessage, setCouponMessage] = useState("");
-  const [discount, setDiscount] = useState(0);
-
   const totals = useMemo(() => {
     let mrp = 0;
     let payable = 0;
@@ -23,29 +19,12 @@ export default function Cart({ items = [], onUpdateQty, onRemove, onClear }) {
     });
     const savings = mrp - payable;
     const delivery = payable === 0 || payable >= FREE_SHIPPING_THRESHOLD ? 0 : 49;
-    return { mrp, payable, savings, delivery, grand: payable + delivery - discount, count };
-  }, [items, discount]);
-
-  const applyCoupon = (e) => {
-    e.preventDefault();
-    const code = coupon.trim().toUpperCase();
-    if (!code) return;
-    if (code === "SAVE10" && totals.payable >= 999) {
-      const off = Math.round(totals.payable * 0.1);
-      setDiscount(off);
-      setCouponMessage(`SAVE10 applied! You saved ₹${off.toLocaleString("en-IN")}.`);
-    } else if (code === "FLAT50" && totals.payable >= 499) {
-      setDiscount(50);
-      setCouponMessage("FLAT50 applied! ₹50 off your order.");
-    } else {
-      setDiscount(0);
-      setCouponMessage("Invalid coupon. Try SAVE10 or FLAT50.");
-    }
-  };
+    return { mrp, payable, savings, delivery, grand: payable + delivery, count };
+  }, [items]);
 
   if (!items.length) {
     return (
-      <div className="mx-auto w-[90%] max-w-[720px] py-16 text-center">
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-violet-100 text-violet-600">
           <ShoppingCart size={36} />
         </div>
@@ -56,22 +35,18 @@ export default function Cart({ items = [], onUpdateQty, onRemove, onClear }) {
             Continue Shopping <ArrowRight size={17} />
           </Link>
         </div>
-        <div className="mt-6 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-left text-xs text-gray-500">
-          <p className="font-bold text-gray-700">Try coupons:</p>
-          <p className="mt-1">SAVE10 — 10% off above ₹999 · FLAT50 — ₹50 off above ₹499</p>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-[90%] max-w-[1200px] py-6 sm:py-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">Shopping Cart</h1>
           <p className="mt-1 text-sm text-gray-500">{totals.count} item{totals.count > 1 ? "s" : ""} in your cart</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link to="/" className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 ring-1 ring-violet-200 hover:bg-violet-50">
             Continue Shopping
           </Link>
@@ -88,7 +63,7 @@ export default function Cart({ items = [], onUpdateQty, onRemove, onClear }) {
             const net = Number(item.price) * (1 - Number(item.discountPercentage || 0) / 100);
             return (
               <div key={item.id} className="flex gap-3 rounded-2xl border border-gray-100 bg-white p-3 sm:gap-4 sm:p-4">
-                <Link to={`/product/${item.id}`} className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:h-28 sm:w-28">
+                <Link to={`/product/${item.id}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:h-28 sm:w-28">
                   <img src={item.thumbnail} alt={item.title} className="h-full w-full object-contain p-2" />
                 </Link>
                 <div className="min-w-0 flex-1">
@@ -160,37 +135,14 @@ export default function Cart({ items = [], onUpdateQty, onRemove, onClear }) {
         <aside className="h-fit rounded-3xl border border-gray-100 bg-white p-5 sm:p-6 lg:sticky lg:top-24">
           <h2 className="text-base font-extrabold text-gray-900">Order Summary</h2>
 
-          <form onSubmit={applyCoupon} className="mt-4">
-            <label htmlFor="coupon" className="text-xs font-semibold text-gray-600">Have a coupon?</label>
-            <div className="mt-1.5 flex gap-2">
-              <div className="relative flex-1">
-                <Tag size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  id="coupon"
-                  value={coupon}
-                  onChange={(e) => setCoupon(e.target.value)}
-                  placeholder="SAVE10 / FLAT50"
-                  className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm uppercase outline-none focus:border-violet-500"
-                />
-              </div>
-              <button type="submit" className="shrink-0 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-black">
-                Apply
-              </button>
-            </div>
-            {couponMessage && <p className="mt-2 text-xs text-gray-600">{couponMessage}</p>}
-          </form>
-
           <dl className="mt-5 space-y-2.5 border-t border-dashed border-gray-200 pt-4 text-sm">
             <div className="flex justify-between"><dt className="text-gray-500">Subtotal (MRP)</dt><dd className="font-semibold line-through decoration-gray-300">₹{Math.round(totals.mrp).toLocaleString("en-IN")}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-500">Discount on MRP</dt><dd className="font-semibold text-green-600">− ₹{Math.round(totals.savings).toLocaleString("en-IN")}</dd></div>
-            {discount > 0 && (
-              <div className="flex justify-between"><dt className="text-gray-500">Coupon discount</dt><dd className="font-semibold text-green-600">− ₹{discount.toLocaleString("en-IN")}</dd></div>
-            )}
             <div className="flex justify-between"><dt className="text-gray-500">Delivery</dt><dd className={`font-semibold ${totals.delivery === 0 ? "text-green-600" : ""}`}>{totals.delivery === 0 ? "FREE" : `₹${totals.delivery}`}</dd></div>
             <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-extrabold text-gray-900"><dt>Total</dt><dd>₹{Math.max(0, Math.round(totals.grand)).toLocaleString("en-IN")}</dd></div>
           </dl>
 
-          <p className="mt-2 text-xs text-green-700">You save ₹{Math.round(totals.savings + discount).toLocaleString("en-IN")} on this order</p>
+          <p className="mt-2 text-xs text-green-700">You save ₹{Math.round(totals.savings).toLocaleString("en-IN")} on this order</p>
 
           <button type="button" className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-violet-700">
             Proceed to Checkout <ArrowRight size={17} />

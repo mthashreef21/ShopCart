@@ -9,7 +9,6 @@ import {
   Search,
   Menu,
   X,
-  ChevronDown,
 } from "lucide-react";
 
 function Navbar({ cartCount = 0 }) {
@@ -42,9 +41,9 @@ function Navbar({ cartCount = 0 }) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white shadow-sm">
-      <nav className="mx-auto flex max-w-[1600px] items-center gap-3 px-3 py-3 md:px-5 lg:gap-4 lg:px-8">
+      <nav className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3 px-3 py-3 md:px-5 lg:gap-4 lg:px-8">
         {/* Logo + Mobile Menu */}
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="order-1 flex shrink-0 items-center gap-3">
           <button
             className="rounded-lg p-2 text-gray-800 transition hover:bg-gray-100 xl:hidden"
             type="button"
@@ -60,7 +59,7 @@ function Navbar({ cartCount = 0 }) {
               <ShoppingCart size={24} strokeWidth={2.5} />
             </div>
 
-            <span className="text-xl font-extrabold tracking-tight sm:text-2xl">
+            <span className="hidden text-xl font-extrabold tracking-tight sm:block sm:text-2xl">
               <span className="text-gray-950">Shop</span>
               <span className="text-blue-600">Cart</span>
             </span>
@@ -68,7 +67,7 @@ function Navbar({ cartCount = 0 }) {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden shrink-0 items-center gap-5 xl:ml-6 xl:flex 2xl:ml-8 2xl:gap-7">
+        <div className="order-2 hidden shrink-0 items-center gap-5 xl:ml-6 xl:flex 2xl:ml-8 2xl:gap-7">
           {navLinks.map((link, index) => (
             <Link
               key={link.name}
@@ -87,7 +86,7 @@ function Navbar({ cartCount = 0 }) {
         {/* Search Bar */}
         <form
           onSubmit={handleSearch}
-          className="flex min-w-0 flex-1 items-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 transition focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-50"
+          className="order-4 flex w-full items-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 transition focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-50 sm:order-3 sm:w-auto sm:min-w-0 sm:flex-1"
         >
           <Search
             size={20}
@@ -113,7 +112,7 @@ function Navbar({ cartCount = 0 }) {
         </form>
 
         {/* Right Side Icons */}
-        <div className="flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-5">
+        <div className="order-3 ml-auto flex shrink-0 items-center gap-1 sm:order-4 sm:ml-0 sm:gap-3 lg:gap-5">
           {/* Wishlist */}
           <Link
             to="/wishlist"
@@ -158,14 +157,14 @@ function Navbar({ cartCount = 0 }) {
 
           {/* Account */}
           <Link
-            to="/profile"
-            aria-label="My account"
+            to="/login"
+            aria-label="Login or register"
             className="flex flex-col items-center gap-1 rounded-lg p-2 text-gray-800 transition hover:text-blue-600"
           >
             <UserRound size={23} strokeWidth={1.8} />
 
-            <span className="hidden items-center gap-1 text-xs font-medium lg:flex">
-              Account <ChevronDown size={13} />
+            <span className="hidden text-xs font-medium lg:block">
+              Login
             </span>
           </Link>
         </div>
@@ -185,6 +184,24 @@ function Navbar({ cartCount = 0 }) {
                 {link.name}
               </Link>
             ))}
+
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/login"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
+              >
+                <UserRound size={17} className="mr-2" /> Login
+              </Link>
+
+              <Link
+                to="/register"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex flex-1 items-center justify-center rounded-xl border border-blue-200 px-4 py-3 text-sm font-bold text-blue-700 transition hover:bg-blue-50"
+              >
+                Register
+              </Link>
+            </div>
           </div>
         </div>
       )}

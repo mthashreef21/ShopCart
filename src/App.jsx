@@ -8,6 +8,8 @@ import Cart from "./Pages/Cart";
 import Footer from "./Layouts/Footer";
 import Wishlist from "./Pages/wishlist";
 import Shop from "./Pages/Shop";
+import Login from "./Pages/Login";
+import Register from "./Pages/Register";
 
 function App() {
   // Load the saved cart when the app starts
@@ -122,6 +124,10 @@ function App() {
           />
 
           <Route path="/wishlist" element={<Wishlist onAdd={addToCart} />}/>
+
+          <Route path="/login" element={<Login />} />
+
+          <Route path="/register" element={<Register />} />
 
           <Route path="*"element={<Home onAdd={addToCart} />}/>
           
