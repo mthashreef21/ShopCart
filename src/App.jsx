@@ -127,6 +127,7 @@ function App() {
           
           <Route path="/shop" element={<Shop onAdd={addToCart} />}/>
         
+        
         </Routes>
       </main>
 
