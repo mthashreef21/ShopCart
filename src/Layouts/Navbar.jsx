@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import {
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 function Navbar({ cartCount = 0 }) {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -26,17 +27,17 @@ function Navbar({ cartCount = 0 }) {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Shop", href: "/shop" },
-    { name: "Categories", href: "/categories" },
-    { name: "Deals", href: "/deals" },
-    { name: "Brands", href: "/brands" },
   ];
 
   const handleSearch = (e) => {
     e.preventDefault();
 
-    if (!searchQuery.trim()) return;
+    const query = searchQuery.trim();
 
-    console.log("Searching for:", searchQuery);
+    if (!query) return;
+
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+    setIsMenuOpen(false);
   };
 
   return (

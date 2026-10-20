@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Search,
@@ -20,6 +20,50 @@ import { toggleWishlist } from "../Features/wishlist/wishlistSlice";
 
 const PRODUCTS_PER_PAGE = 12;
 
+// DummyJSON provides sample prices, not live Indian retail prices.
+// Treat the source prices as USD-like demo values and convert them to INR.
+// This is an approximate display conversion, NOT verified real-world pricing.
+const USD_TO_INR = 88;
+
+// Map homepage categories to exact DummyJSON category identifiers.
+// Avoid keyword matching: descriptions can accidentally place unrelated products
+// (such as kitchen accessories) in categories like Sports.
+const CATEGORY_MAPPING = {
+  electronics: ["smartphones", "laptops", "tablets", "mobile-accessories"],
+  fashion: [
+    "mens-shirts", "mens-shoes", "mens-watches", "womens-dresses",
+    "womens-shoes", "womens-watches", "womens-bags", "womens-jewellery",
+    "tops", "sunglasses",
+  ],
+  "home-living": ["furniture", "home-decoration", "kitchen-accessories"],
+  beauty: ["beauty", "fragrances", "skin-care"],
+  sports: ["sports-accessories"],
+  "toys-games": ["toys"],
+  groceries: ["groceries"],
+  books: ["books"],
+};
+
+const CATEGORY_NAMES = {
+  electronics: "Electronics",
+  fashion: "Fashion",
+  "home-living": "Home & Living",
+  beauty: "Beauty",
+  sports: "Sports",
+  "toys-games": "Toys & Games",
+  groceries: "Groceries",
+  books: "Books",
+};
+
+function matchesCategory(product, categorySlug) {
+  if (!categorySlug) return true;
+
+  const allowedCategories = CATEGORY_MAPPING[categorySlug];
+  if (!allowedCategories) return false;
+
+  const productCategory = String(product.category ?? "").toLowerCase();
+  return allowedCategories.includes(productCategory);
+}
+
 const formatPrice = (price) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -39,7 +83,10 @@ export default function Shop({ onAdd }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [search, setSearch] = useState("");
+  // Read the search query passed from the Navbar, e.g. /shop?search=iphone.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("search") ?? "";
+
   const [sortBy, setSortBy] = useState("default");
 
   const [minPrice, setMinPrice] = useState("");
@@ -56,6 +103,10 @@ export default function Shop({ onAdd }) {
 
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const selectedCategory = searchParams.get("category") ?? "";
+  const categoryTitle = CATEGORY_NAMES[selectedCategory];
+
 
   // Fetch products and categories
   useEffect(() => {
@@ -76,7 +127,15 @@ export default function Shop({ onAdd }) {
         }
 
         const productsData = await productsResponse.json();
-        setProducts(productsData.products ?? []);
+
+        // Normalize prices once so Shop cards, sorting, price filters, and cart
+        // receive the same INR-converted value. DummyJSON prices are sample data.
+        const productsInINR = (productsData.products ?? []).map((product) => ({
+          ...product,
+          price: Math.round(Number(product.price ?? 0) * USD_TO_INR),
+        }));
+
+        setProducts(productsInINR);
       } catch (err) {
         if (err.name !== "AbortError") {
           setError("Could not load products. Please try again.");
@@ -93,16 +152,21 @@ export default function Shop({ onAdd }) {
     return () => controller.abort();
   }, []);
 
-  // Brands are based on the products returned by the API.
-  const brands = useMemo(
-    () =>
-      [...new Set(products.map((product) => product.brand).filter(Boolean))].sort(),
-    [products]
-  );
+  // Brands are based on the current category, when one is selected.
+  const brands = useMemo(() => {
+    const categoryProducts = selectedCategory
+      ? products.filter((product) => matchesCategory(product, selectedCategory))
+      : products;
 
-  // Apply search and selected filters.
+    return [...new Set(categoryProducts.map((product) => product.brand).filter(Boolean))].sort();
+  }, [products, selectedCategory]);
+
+  // Apply category, search, and selected filters.
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    let result = selectedCategory
+      ? products.filter((product) => matchesCategory(product, selectedCategory))
+      : [...products];
+
     const searchTerm = search.trim().toLowerCase();
 
     if (searchTerm) {
@@ -158,6 +222,7 @@ export default function Shop({ onAdd }) {
   }, [
     products,
     search,
+    selectedCategory,
     selectedBrands,
     minPrice,
     maxPrice,
@@ -169,7 +234,7 @@ export default function Shop({ onAdd }) {
   // Reset pagination whenever search or filters change.
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, selectedBrands, minPrice, maxPrice, minRating, inStockOnly, sortBy]);
+  }, [search, selectedCategory, selectedBrands, minPrice, maxPrice, minRating, inStockOnly, sortBy]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
@@ -191,9 +256,13 @@ export default function Shop({ onAdd }) {
     dispatch(toggleWishlist(product));
   };
 
-  // Clear all filters while preserving the current sort choice.
+  // Clear all filters and remove the search query while preserving the sort choice.
   const clearFilters = () => {
-    setSearch("");
+    setSearchParams((params) => {
+      const nextParams = new URLSearchParams(params);
+      nextParams.delete("search");
+      return nextParams;
+    }, { replace: true });
     setSelectedBrands([]);
     setMinPrice("");
     setMaxPrice("");
@@ -222,13 +291,19 @@ export default function Shop({ onAdd }) {
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                Explore Our <span className="text-blue-600">Products</span>
+                {categoryTitle ? <>Shop <span className="text-blue-600">{categoryTitle}</span></> : <>Explore Our <span className="text-blue-600">Products</span></>}
               </h1>
 
               <p className="mt-3 max-w-xl text-sm leading-6 text-gray-500 sm:text-base">
-                Find the perfect products for your lifestyle. Discover great
-                deals across all your favourite categories.
+                {categoryTitle
+                  ? `Discover products in ${categoryTitle}.`
+                  : "Find the perfect products for your lifestyle. Discover great deals across all your favourite categories."}
               </p>
+              {selectedCategory && (
+                <Link to="/shop" className="mt-3 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-800">
+                  View all products →
+                </Link>
+              )}
             </div>
 
             <div className="flex items-center gap-3 rounded-xl bg-blue-50 px-4 py-3">
@@ -236,7 +311,7 @@ export default function Shop({ onAdd }) {
 
               <div>
                 <p className="text-lg font-bold text-gray-900">
-                  {loading ? "..." : products.length}
+                  {loading ? "..." : filteredProducts.length}
                 </p>
 
                 <p className="text-xs text-gray-500">Products available</p>
@@ -248,32 +323,11 @@ export default function Shop({ onAdd }) {
 
       {/* Main shop content */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Search and sorting */}
-        <div className="mb-7 flex flex-col gap-4 lg:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search products or brands..."
-              className="w-full rounded-xl border border-gray-200 bg-white py-3.5 pl-12 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-                aria-label="Clear search"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-
+        {/* Sorting and mobile filters (search is handled by the Navbar) */}
+        <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:justify-end">
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition lg:hidden ${
                 showFilters
@@ -285,7 +339,7 @@ export default function Shop({ onAdd }) {
               Filters
             </button>
 
-            <div className="relative flex-1 lg:w-60 lg:flex-none">
+            <div className="relative flex-1 sm:w-60 sm:flex-none">
               <ArrowUpDown className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
               <select
