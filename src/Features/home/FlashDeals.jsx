@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+
+import { toggleWishlist } from "../wishlist/wishlistSlice";
 
 import {
   Clock,
@@ -10,14 +13,24 @@ import {
   Zap,
   Flame,
 } from "lucide-react";
-import { formatPrice, getDiscountedPrice } from "../../utils/price";
+
+import {
+  formatPrice,
+  getDiscountedPrice,
+} from "../../utils/price";
 
 function FlashDeals({ onAdd }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [timeLeft, setTimeLeft] = useState(12 * 60 * 60);
-  const [wishlist, setWishlist] = useState([]);
+
+  // Redux wishlist state
+  const dispatch = useDispatch();
+
+  const wishlistItems = useSelector(
+    (state) => state.wishlist.items
+  );
 
   // Fetch products from DummyJSON
   useEffect(() => {
@@ -30,7 +43,9 @@ function FlashDeals({ onAdd }) {
 
         const response = await fetch(
           "https://dummyjson.com/products?limit=0",
-          { signal: controller.signal }
+          {
+            signal: controller.signal,
+          }
         );
 
         if (!response.ok) {
@@ -39,7 +54,7 @@ function FlashDeals({ onAdd }) {
 
         const data = await response.json();
 
-        // Select discounted products and show only 3.
+        // Select discounted products and show only 3
         const discountedProducts = data.products
           .filter((product) => product.discountPercentage > 0)
           .slice(0, 3);
@@ -84,13 +99,16 @@ function FlashDeals({ onAdd }) {
 
   const seconds = String(timeLeft % 60).padStart(2, "0");
 
-  // Wishlist toggle
-  const toggleWishlist = (productId) => {
-    setWishlist((previousWishlist) =>
-      previousWishlist.includes(productId)
-        ? previousWishlist.filter((id) => id !== productId)
-        : [...previousWishlist, productId]
+  // Check whether a product is in the wishlist
+  const isWishlisted = (productId) => {
+    return wishlistItems.some(
+      (item) => item.id === productId
     );
+  };
+
+  // Toggle wishlist using Redux
+  const handleWishlistToggle = (product) => {
+    dispatch(toggleWishlist(product));
   };
 
   // Maximum discount among displayed products
@@ -168,9 +186,10 @@ function FlashDeals({ onAdd }) {
 
       {/* Main Content */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        {/* Product Grid: 3 products in one desktop row */}
+        {/* Product Grid */}
         <div className="grid grid-cols-2 items-stretch gap-3 sm:gap-5 lg:col-span-3 lg:grid-cols-3">
           {loading ? (
+            // Loading Skeletons
             Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={index}
@@ -186,6 +205,7 @@ function FlashDeals({ onAdd }) {
               </div>
             ))
           ) : error ? (
+            // Error State
             <div className="col-span-full rounded-2xl bg-red-50 p-6 text-center">
               <p className="text-red-600">{error}</p>
 
@@ -198,10 +218,12 @@ function FlashDeals({ onAdd }) {
               </button>
             </div>
           ) : products.length === 0 ? (
+            // Empty State
             <p className="col-span-full py-10 text-center text-gray-500">
               No discounted products are available.
             </p>
           ) : (
+            // Product Cards
             products.map((product) => (
               <div
                 key={product.id}
@@ -209,7 +231,10 @@ function FlashDeals({ onAdd }) {
               >
                 {/* Product Image */}
                 <div className="relative aspect-square overflow-hidden bg-gray-50">
-                  <Link to={`/product/${product.id}`} aria-label={`View ${product.title}`}>
+                  <Link
+                    to={`/product/${product.id}`}
+                    aria-label={`View ${product.title}`}
+                  >
                     <img
                       src={product.thumbnail}
                       alt={product.title}
@@ -226,18 +251,19 @@ function FlashDeals({ onAdd }) {
                   {/* Wishlist Button */}
                   <button
                     type="button"
-                    onClick={() => toggleWishlist(product.id)}
+                    onClick={() => handleWishlistToggle(product)}
                     aria-label={
-                      wishlist.includes(product.id)
+                      isWishlisted(product.id)
                         ? "Remove from wishlist"
                         : "Add to wishlist"
                     }
+                    aria-pressed={isWishlisted(product.id)}
                     className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition hover:scale-110 sm:right-3 sm:top-3 sm:h-9 sm:w-9"
                   >
                     <Heart
                       size={18}
                       className={
-                        wishlist.includes(product.id)
+                        isWishlisted(product.id)
                           ? "fill-red-500 text-red-500"
                           : "text-gray-600"
                       }
@@ -252,7 +278,10 @@ function FlashDeals({ onAdd }) {
                   </p>
 
                   <h3 className="line-clamp-2 min-h-10 text-sm font-semibold text-gray-900 sm:text-base">
-                    <Link to={`/product/${product.id}`} className="hover:text-violet-700">
+                    <Link
+                      to={`/product/${product.id}`}
+                      className="hover:text-violet-700"
+                    >
                       {product.title}
                     </Link>
                   </h3>
