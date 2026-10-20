@@ -1,20 +1,37 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, CheckCircle2, Mail, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { AuthLayout, PasswordField, TextField } from "../Features/auth/AuthLayout";
+import {
+  AlertCircle,
+  ArrowRight,
+  Mail,
+  User,
+} from "lucide-react";
+
+import {
+  AuthLayout,
+  PasswordField,
+  TextField,
+} from "../Features/auth/AuthLayout";
+
+import { registerUser } from "../Features/auth/authService";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/** Returns a 0-3 score used to drive the strength bars. */
 const getStrength = (value) => {
   if (!value) return 0;
 
   let score = 0;
 
   if (value.length >= 8) score++;
-  if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++;
-  if (/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) score++;
+
+  if (/[a-z]/.test(value) && /[A-Z]/.test(value)) {
+    score++;
+  }
+
+  if (/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) {
+    score++;
+  }
 
   return score;
 };
@@ -26,14 +43,16 @@ const strengthMeta = [
 ];
 
 export default function Register() {
+  const navigate = useNavigate();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [terms, setTerms] = useState(false);
+
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const strength = getStrength(password);
   const strengthInfo = strengthMeta[Math.min(strength, 2)];
@@ -75,7 +94,7 @@ export default function Register() {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    setSuccess("");
+    setFormError("");
 
     const next = validate();
     setErrors(next);
@@ -85,31 +104,25 @@ export default function Register() {
       return;
     }
 
-    setFormError("");
-    setSuccess(`Account created for ${name.trim()}. You can sign in now.`);
+    try {
+      registerUser({
+        name,
+        email,
+        password,
+      });
+
+      // Registration succeeded. Ask the user to sign in.
+      navigate("/login", {
+        replace: true,
+        state: {
+          registeredEmail: email.trim(),
+          message: "Account created successfully. Please sign in.",
+        },
+      });
+    } catch (error) {
+      setFormError(error.message || "Unable to create your account.");
+    }
   };
-
-  if (success) {
-    return (
-      <AuthLayout
-        title="Welcome to ShopCart"
-        subtitle="Your account is ready to use."
-      >
-        <div className="rounded-2xl border border-green-100 bg-green-50 p-5 text-center">
-          <CheckCircle2 size={40} className="mx-auto text-green-600" />
-
-          <p className="mt-3 text-sm font-semibold text-green-800">{success}</p>
-
-          <Link
-            to="/login"
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
-          >
-            Go to Sign In <ArrowRight size={16} />
-          </Link>
-        </div>
-      </AuthLayout>
-    );
-  }
 
   return (
     <AuthLayout
@@ -118,7 +131,10 @@ export default function Register() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="font-bold text-blue-600 hover:text-blue-700">
+          <Link
+            to="/login"
+            className="font-bold text-blue-600 hover:text-blue-700"
+          >
             Sign in
           </Link>
         </>
@@ -176,12 +192,16 @@ export default function Register() {
                   <span
                     key={index}
                     className={`h-1.5 flex-1 rounded-full transition ${
-                      index < strength ? strengthInfo.bar : "bg-gray-200"
+                      index < strength
+                        ? strengthInfo.bar
+                        : "bg-gray-200"
                     }`}
                   />
                 ))}
 
-                <span className={`ml-1 text-xs font-bold ${strengthInfo.text}`}>
+                <span
+                  className={`ml-1 text-xs font-bold ${strengthInfo.text}`}
+                >
                   {strengthInfo.label}
                 </span>
               </div>
@@ -207,16 +227,24 @@ export default function Register() {
               onChange={(event) => setTerms(event.target.checked)}
               className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600"
             />
+
             <span>
               I agree to the{" "}
-              <span className="font-semibold text-blue-600">Terms of Service</span>{" "}
+              <span className="font-semibold text-blue-600">
+                Terms of Service
+              </span>{" "}
               and{" "}
-              <span className="font-semibold text-blue-600">Privacy Policy</span>.
+              <span className="font-semibold text-blue-600">
+                Privacy Policy
+              </span>
+              .
             </span>
           </label>
 
           {errors.terms && (
-            <p className="mt-1.5 text-xs font-medium text-red-600">{errors.terms}</p>
+            <p className="mt-1.5 text-xs font-medium text-red-600">
+              {errors.terms}
+            </p>
           )}
         </div>
 
@@ -228,7 +256,7 @@ export default function Register() {
         </button>
 
         <p className="text-center text-xs text-gray-400">
-          Demo only &mdash; no data is stored or sent anywhere.
+          Demo authentication only.
         </p>
       </form>
     </AuthLayout>

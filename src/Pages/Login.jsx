@@ -1,18 +1,39 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, CheckCircle2, Mail } from "lucide-react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
-import { AuthLayout, PasswordField, TextField } from "../Features/auth/AuthLayout";
+import {
+  AlertCircle,
+  ArrowRight,
+  Mail,
+} from "lucide-react";
+
+import {
+  AuthLayout,
+  PasswordField,
+  TextField,
+} from "../Features/auth/AuthLayout";
+
+import {
+  getCurrentUser,
+  loginUser,
+} from "../Features/auth/authService";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
+
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
-  const [success, setSuccess] = useState("");
+
+  // If already logged in, go directly to the Dashboard.
+  if (getCurrentUser()) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const validate = () => {
     const next = {};
@@ -35,7 +56,7 @@ export default function Login() {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    setSuccess("");
+    setFormError("");
 
     const next = validate();
     setErrors(next);
@@ -45,31 +66,15 @@ export default function Login() {
       return;
     }
 
-    setFormError("");
-    setSuccess(`Signed in successfully. Welcome back, ${email.trim()}!`);
+    try {
+      loginUser(email, password, remember);
+
+      // Redirect after successful login.
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      setFormError(error.message || "Unable to sign in.");
+    }
   };
-
-  if (success) {
-    return (
-      <AuthLayout
-        title="You're signed in"
-        subtitle="Your session is ready. Happy shopping!"
-      >
-        <div className="rounded-2xl border border-green-100 bg-green-50 p-5 text-center">
-          <CheckCircle2 size={40} className="mx-auto text-green-600" />
-
-          <p className="mt-3 text-sm font-semibold text-green-800">{success}</p>
-
-          <Link
-            to="/"
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
-          >
-            Continue Shopping <ArrowRight size={16} />
-          </Link>
-        </div>
-      </AuthLayout>
-    );
-  }
 
   return (
     <AuthLayout
@@ -78,7 +83,10 @@ export default function Login() {
       footer={
         <>
           Don&apos;t have an account?{" "}
-          <Link to="/register" className="font-bold text-blue-600 hover:text-blue-700">
+          <Link
+            to="/register"
+            className="font-bold text-blue-600 hover:text-blue-700"
+          >
             Create one
           </Link>
         </>
@@ -103,7 +111,10 @@ export default function Login() {
           placeholder="you@example.com"
           icon={Mail}
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setFormError("");
+          }}
           error={errors.email}
         />
 
@@ -113,7 +124,10 @@ export default function Login() {
           autoComplete="current-password"
           placeholder="Enter your password"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            setFormError("");
+          }}
           error={errors.password}
         />
 
@@ -130,7 +144,11 @@ export default function Login() {
 
           <button
             type="button"
-            onClick={() => setFormError("Password reset is not available in this demo.")}
+            onClick={() =>
+              setFormError(
+                "Password reset is not available in this demo."
+              )
+            }
             className="text-sm font-semibold text-blue-600 hover:text-blue-700"
           >
             Forgot password?
@@ -145,7 +163,7 @@ export default function Login() {
         </button>
 
         <p className="text-center text-xs text-gray-400">
-          Demo only &mdash; no data is stored or sent anywhere.
+          Demo authentication only.
         </p>
       </form>
     </AuthLayout>
