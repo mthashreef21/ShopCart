@@ -181,11 +181,10 @@ ShopCart/
 
 ## 👨‍💻 Built By:
 
-**Muhammed Thashreef
-  Komal Jasapara
-  Anuj
-  Pranav
-**
+- **Muhammed Thashreef**
+- **Komal Jasapara**
+- **Anuj**
+- **Pranav**
 
 GitHub: [@mthashreef21](https://github.com/mthashreef21)
 
